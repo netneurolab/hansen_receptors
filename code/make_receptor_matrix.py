@@ -42,7 +42,7 @@ receptors_csv = [path+'data/PET_parcellated/'+scale+'/5HT1a_way_hc36_savli.csv',
                  path+'data/PET_parcellated/'+scale+'/H3_cban_hc8_gallezot.csv', 
                  path+'data/PET_parcellated/'+scale+'/M1_lsn_hc24_naganawa.csv',
                  path+'data/PET_parcellated/'+scale+'/mGluR5_abp_hc22_rosaneto.csv',
-                 path+'data/PET_parcellated/'+scale+'/mGluR5_abp_hc28_rosaneto.csv',
+                 path+'data/PET_parcellated/'+scale+'/mGluR5_abp_hc28_dubois.csv',
                  path+'data/PET_parcellated/'+scale+'/mGluR5_abp_hc73_smart.csv',
                  path+'data/PET_parcellated/'+scale+'/MU_carfentanil_hc204_kantonen.csv',
                  path+'data/PET_parcellated/'+scale+'/NAT_MRB_hc77_ding.csv',
@@ -129,12 +129,9 @@ ax = sns.distplot(np.corrcoef(zscore(receptor_data))[np.triu(np.ones(nnodes), 1)
 ax.set(xlabel = 'receptor similarity')
 plt.savefig(path+'figures/hist_receptor_similarity.eps')
 
+#plot each receptor map
 
-
-
-
-
-annot = datasets.fetch_cammoun2012('fsaverage')[scale]
+annot = datasets.fetch_cammoun2012('fsaverage')['scale125']
 
 for k in range(len(receptor_names)):
     brain = plotting.plot_fsaverage(data=receptor_data[:, k],
