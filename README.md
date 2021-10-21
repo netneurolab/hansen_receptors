@@ -25,7 +25,7 @@ Here are the details:
 - [PET_parcellated](data/PET_parcellated/) has the parcellated PET maps in `csv` format
 - [autoradiography](data/autoradiography/) is just a copy of [Al Goulas' repo](https://github.com/AlGoulas/receptor_principles) (in support of [this](https://www.pnas.org/content/118/3/e2020574118.long) paper) but the data originally comes from Karl Zilles and Nicola Palomero-Gallagher's Table S2 in [this](https://www.frontiersin.org/articles/10.3389/fnana.2017.00078/full) paper.
 - [lausanne](data/lausanne/) has the structural and functional (group averaged/consensus) networks
-- [MEG](data/MEG/) has parcellated group-average power maps for 6 power distributions (order: delta, theta, alpha, beta, low gamma, high gamma) from 33 unrelated subjects in HCP
+- [MEG](data/MEG/) has parcellated group-average power maps for 6 power distributions (order: delta, theta, alpha, beta, low gamma, high gamma) from 33 unrelated subjects in HCP. Note that HCP data redistribution must follow their [data terms](https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-open-access-data-use-terms).
 - [neurosynth](data/neurosynth/) has parcellated Neurosynth association maps for 123 terms from the Cognitive Atlas. See more on how to get these maps from [this course](https://github.com/netneurolab/ipn-summer-school/tree/main/lectures/2021-07-02/13-15) I taught.
 - [colourmap.csv](data/colourmap.csv) is my colourmap!
 - [enigma_atrophy.csv](data/enigma_atrophy.csv) are the ENIGMA-derived cortical thinning maps (see the [enigmatoolbox](https://enigma-toolbox.readthedocs.io/en/latest/)). Disorder names can be found [here](code/disease.py)
