@@ -19,7 +19,7 @@ This folder contains the following files (in an order that complements the manus
 
 ## `data`
 The [data](data/) folder contains all the data used to run the analyses.
-If you use any of the PET data, please cite (1) the paper(s) that originally collected the data (citations can be found in [Table_S3.xlsx](manuscript/Table_S3.xlsx)) and (2) [this paper (!)]().
+If you use any of the PET data, please cite (1) the paper(s) that originally collected the data (citations can be found in [Table_S3.xlsx](manuscript/Table_S3.xlsx)) and (2) [this paper (!)](https://www.biorxiv.org/content/10.1101/2021.10.28.466336v1).
 Here are the details:
 - [PET_nifti_images](data/PET_nifti_images/) has a bunch of group-averaged volumetric PET images. PET data is also available on [neuromaps](https://github.com/netneurolab/neuromaps), a handy toolbox that makes comparing brain maps and converting brain maps between template sapces and parcellations easy! Naming convention is: `<receptor_name>_<tracer>_<number of healthy controls>_<data reference>.nii.gz`. Note: some of this data was originally available elsewhere. See Copenhagen's [Neurobiology Research Unit](https://xtra.nru.dk/index.html) for serotonin and GABA atlases, and [JuSpace](https://github.com/juryxy/JuSpace) for a collection of PET maps, some of which come from [NeuroVault](https://neurovault.org/). Also: there is one map that is not yet available in volumetric form (`VAChT_feobv_hc3_spreng.nii`) but will be, soon. The parcellated versions are in the [PET_parcellated](data/PET_parcellated/) folder.
 - [PET_parcellated](data/PET_parcellated/) has the parcellated PET maps in `csv` format
