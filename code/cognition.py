@@ -50,6 +50,9 @@ def pls_cv_distance_dependent(X, Y, coords, trainpct=0.75, lv=0,
 
     """
 
+    X = np.array(X)
+    Y = np.array(Y)
+
     nnodes = len(coords)
     train = np.zeros((nnodes, ))
     test = np.zeros((nnodes, ))
@@ -146,7 +149,7 @@ pls_result = pyls.behavioral_pls(X, Y, n_boot=nspins, n_perm=nspins, permsamples
                                  test_split=0, seed=1234)
 pyls.save_results(path+'results/pls_result.hdf5', pls_result)
 
-train, test = pls_cv_distance_dependent(X, Y, coords,
+train, test, _ = pls_cv_distance_dependent(X, Y, coords,
                                         spins=spins, nspins=nspins)
 lv = 0  # latent variable
 np.save(path+'results/pls_train.npy', train)
