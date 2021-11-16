@@ -14,6 +14,9 @@ This repository contains code and data created in support of my project "Mapping
 All code was written in Python.
 Below, I describe all the folders and files in details.
 
+Temporary note: I am in the process of adding an NMDA PET tracer map to all the analyses.
+This data isn't available in its volumetric form yet, but will be soon. Some scripts have been updated to reflect the addition of NMDA.
+
 ## `code`
 The [code](code/) folder contains all the code used to run the analyses and generate the figures.
 If you use this code, don't forget to change the `path` variable.
