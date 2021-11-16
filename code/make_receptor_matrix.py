@@ -46,6 +46,7 @@ receptors_csv = [path+'data/PET_parcellated/'+scale+'/5HT1a_way_hc36_savli.csv',
                  path+'data/PET_parcellated/'+scale+'/mGluR5_abp_hc73_smart.csv',
                  path+'data/PET_parcellated/'+scale+'/MU_carfentanil_hc204_kantonen.csv',
                  path+'data/PET_parcellated/'+scale+'/NAT_MRB_hc77_ding.csv',
+                 path+'data/PET_parcellated/'+scale+'/NMDA_ge179_hc29_galovic.csv',
                  path+'data/PET_parcellated/'+scale+'/VAChT_feobv_hc3_spreng.csv',
                  path+'data/PET_parcellated/'+scale+'/VAChT_feobv_hc4_tuominen.csv',
                  path+'data/PET_parcellated/'+scale+'/VAChT_feobv_hc5_bedard_sum.csv',
@@ -58,7 +59,7 @@ for i in range(len(receptors_csv)):
 
 receptor_names = np.array(["5HT1a", "5HT1b", "5HT2a", "5HT4", "5HT6", "5HTT", "A4B2",
                            "CB1", "D1", "D2", "DAT", "GABAa", "H3", "M1", "mGluR5",
-                           "MOR", "NET", "VAChT"])
+                           "MOR", "NET", "NMDA", "VAChT"])
 np.save(path+'data/receptor_names_pet.npy', receptor_names)
 
 # make final region x receptor matrix
@@ -67,19 +68,19 @@ receptor_data = np.zeros([nnodes, len(receptor_names)])
 receptor_data[:, 0] = r[:, 0]
 receptor_data[:, 2:9] = r[:, 3:10]
 receptor_data[:, 10:14] = r[:, 12:16]
-receptor_data[:, 15:17] = r[:, 19:21]
+receptor_data[:, 15:18] = r[:, 19:22]
 
 # weighted average of 5HT1B p943
-receptor_data[:, 1] = (r[:, 1]*22 + r[:, 2]*65) / (22+65)
+receptor_data[:, 1] = (zscore(r[:, 1])*22 + zscore(r[:, 2])*65) / (22+65)
 
 # weighted average of D2 flb457
-receptor_data[:, 9] = (r[:, 10]*37 + r[:, 11]*55) / (37+55)
+receptor_data[:, 9] = (zscore(r[:, 10])*37 + zscore(r[:, 11])*55) / (37+55)
 
 # weighted average of mGluR5 ABP688
-receptor_data[:, 14] = (r[:, 16]*22 + r[:, 17]*28 + r[:, 18]*73) / (22+28+73)
+receptor_data[:, 14] = (zscore(r[:, 16])*22 + zscore(r[:, 17])*28 + zscore(r[:, 18])*73) / (22+28+73)
 
 # weighted average of VAChT FEOBV
-receptor_data[:, 17] = (r[:, 21]*3 + r[:, 22]*4 + r[:, 23] + r[:, 24]) / \
+receptor_data[:, 18] = (zscore(r[:, 22])*3 + zscore(r[:, 23])*4 + zscore(r[:, 24]) + zscore(r[:, 25])) / \
                        (3+4+5+18)
 
 np.savetxt(path+'results/receptor_data_'+scale+'.csv', receptor_data, delimiter=',')

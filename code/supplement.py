@@ -202,7 +202,7 @@ brain = plotting.plot_fsaverage(data=np.mean(zscore(recept060), axis=1),
                                 vmax=np.max(np.abs(np.mean(zscore(recept060), axis=1))),
                                 views=['lat', 'med'],
                                 data_kws={'representation': "wireframe"})
-brain.save_image(path+'figures/surface_recept_density)scale060.eps')
+brain.save_image(path+'figures/surface_recept_density_scale060.eps')
 
 # mean density: scale125
 annot = datasets.fetch_cammoun2012('fsaverage')['scale125']
@@ -238,11 +238,12 @@ loo_rho = np.zeros((len(receptor_names), ))
 mask = np.triu(np.ones(nnodes), 1) > 0
 for k in range(len(receptor_names)):
     # receptor similarity when you remove one disorder
-    tmp = np.corrcoef(np.delete(receptor_data, k, axis=1))
+    tmp = np.corrcoef(np.delete(zscore(receptor_data), k, axis=1))
     # correlate with complete receptor similarity matrix
     loo_rho[k], _ = pearsonr(tmp[mask], np.corrcoef(zscore(receptor_data))[mask])
 
 plt.ion()
+plt.figure()
 ax = sns.violinplot(data=loo_rho)
 ax.set(ylabel='correlation')
 plt.savefig(path+'figures/violin_loo.eps')
