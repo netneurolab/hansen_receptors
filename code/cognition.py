@@ -156,6 +156,11 @@ np.save(path+'results/pls_train.npy', train)
 np.save(path+'results/pls_test.npy', test)
 
 # covariance explained
+# NOTE: `pls_result['permres']['perm_singval'] comes from locally editing
+# pyls.base.py run_pls(self, X, Y) to return the `d_perm` variable.
+# Also note that for this edit to work, the structures.PLSPermResult
+# object needs to be updated to allow the `d_perm` to be returned.
+
 cv = pls_result["singvals"]**2 / np.sum(pls_result["singvals"]**2)
 null_singvals = pls_result['permres']['perm_singval']
 cv_spins = null_singvals**2 / sum(null_singvals**2)
