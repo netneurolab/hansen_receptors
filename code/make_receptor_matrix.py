@@ -130,16 +130,16 @@ ax = sns.distplot(np.corrcoef(zscore(receptor_data))[np.triu(np.ones(nnodes), 1)
 ax.set(xlabel = 'receptor similarity')
 plt.savefig(path+'figures/hist_receptor_similarity.eps')
 
-#plot each receptor map
+# plot each receptor map
 
-annot = datasets.fetch_cammoun2012('fsaverage')['scale125']
-
-for k in range(len(receptor_names)):
-    brain = plotting.plot_fsaverage(data=receptor_data[:, k],
-                                    lhannot=annot.lh,
-                                    rhannot=annot.rh,
-                                    order = 'rl',
-                                    colormap='plasma',
-                                    views=['lat', 'med'],
-                                    data_kws={'representation': "wireframe"})
-    brain.save_image(path+'figures/surface_receptor_'+receptor_names[k]+'.png')
+if scale == 'scale125':
+    annot = datasets.fetch_cammoun2012('fsaverage')['scale125']
+    for k in range(len(receptor_names)):
+        brain = plotting.plot_fsaverage(data=receptor_data[:, k],
+                                        lhannot=annot.lh,
+                                        rhannot=annot.rh,
+                                        order = 'rl',
+                                        colormap='plasma',
+                                        views=['lat', 'med'],
+                                        data_kws={'representation': "wireframe"})
+        brain.save_image(path+'figures/surface_receptor_'+receptor_names[k]+'.png')

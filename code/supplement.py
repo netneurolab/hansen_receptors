@@ -49,7 +49,7 @@ receptors_csv = [path+'data/PET_parcellated/'+scale+'/5HT1a_way_hc36_savli.csv',
                  path+'data/PET_parcellated/'+scale+'/5HT2a_ALT_hc19_savli.csv',
                  path+'data/PET_parcellated/'+scale+'/5HT2a_mdl_hc3_talbot.csv',
                  path+'data/PET_parcellated/'+scale+'/5HT4_sb20_hc59_beliveau.csv',
-                 path+'data/PET_parcellated/'+scale+'/5HT6_gsk_hc30_radhakrishnan.csv',
+                 path+'data/PET_parcellated/'+scale+'/5HT6_gsk_hc30_radnakrishnan.csv',
                  path+'data/PET_parcellated/'+scale+'/5HTT_dasb_hc100_beliveau.csv',
                  path+'data/PET_parcellated/'+scale+'/5HTT_dasb_hc30_savli.csv',
                  path+'data/PET_parcellated/'+scale+'/A4B2_flubatine_hc30_hillmer.csv',
@@ -88,7 +88,7 @@ for receptor in receptors_csv:
 
 receptor_data = np.genfromtxt(path+'results/receptor_data_'+scale+'.csv', delimiter=',')
 receptor_data = zscore(receptor_data)
-receptor_names = np.load(path+'data/receptor_names_pet.npy')
+receptor_names = list(np.load(path+'data/receptor_names_pet.npy'))
 
 plt.ion()
 fig, axs = plt.subplots(3, 5, figsize=(18, 10))
@@ -107,7 +107,7 @@ axs[0].set_title("5HT1b")
 axs[0].legend(("Savli", "Gallezot"))
 
 sns.regplot(x=receptor_data[:, receptor_names.index("D2")],
-            y=receptors_all['D2_flb457_hc37_sandiego'], ci=None,
+            y=receptors_all['D2_flb457_hc37_smith'], ci=None,
             ax=axs[1])
 sns.regplot(x=receptor_data[:, receptor_names.index("D2")],
             y=receptors_all['D2_flb457_hc55_sandiego'], ci=None,
@@ -117,10 +117,10 @@ axs[1].set_title("D2")
 axs[1].legend(("Sandiego37", "Sandiego55"))
 
 sns.regplot(x=receptor_data[:, receptor_names.index("mGluR5")],
-            y=receptors_all['mGluR5_abp_hc22_stijn_lls'], ci=None,
+            y=receptors_all['mGluR5_abp_hc22_rosaneto'], ci=None,
             ax=axs[2])
 sns.regplot(x=receptor_data[:, receptor_names.index("mGluR5")],
-            y=receptors_all['mGluR5_abp_hc28_stijn_lls'], ci=None,
+            y=receptors_all['mGluR5_abp_hc28_dubois'], ci=None,
             ax=axs[2])
 sns.regplot(x=receptor_data[:, receptor_names.index("mGluR5")],
             y=receptors_all['mGluR5_abp_hc73_smart'], ci=None,
@@ -147,13 +147,13 @@ axs[3].legend(("Spreng", "Tuominen", "Bedard", "Aghourian"))
 
 # comparing different tracers
 
-t = ["5HT1a", "5HT1b", "5HT2a", "5HTT", "CB1", "D2", "DAT", "GABAa", "MU", "NAT"]
+t = ["5HT1a", "5HT1b", "5HT2a", "5HTT", "CB1", "D2", "DAT", "GABAa", "MOR", "NET"]
 othermap = ["5HT1a_cumi_hc8_beliveau", "5HT1b_az_hc36_beliveau", 
             "5HT2a_ALT_hc19_savli", "5HTT_dasb_hc30_savli",
             "CB1_FMPEPd2_hc22_laurikainen", "D2_fallypride_hc49_jaworska",
             "DAT_fepe2i_hc6_sasaki", "GABAa_flumazenil_hc6_dukart",
             "MU_carfentanil_hc39_turtonen", "NAT_MRB_hc10_hesse"]
-for i in range(5, 16):
+for i in range(5, 15):
     sns.regplot(receptor_data[:, receptor_names.index(t[i-5])],
                 receptors_all[othermap[i-5]], ci=None, ax=axs[i])
     axs[i].set(xlabel="selected map", ylabel="alternative map")
@@ -255,7 +255,8 @@ age effects?
 """
 # at each brain region, correlate age vector to density vector
 age = np.array((26.3, 32.4, 22.6, 25.9, 36.6, 25.1, 33.5, 30.0, 33.0,
-                38.8, 61.0, 26.6, 33.4, 31.7, 40.5, 31.5, 32.3, 63.6))
+                38.8, 61.0, 26.6, 33.4, 31.7, 40.5, 31.5, 32.3, 40.9,
+                63.6))
 age_corr = np.zeros((nnodes, ))
 for k in range(nnodes):
     age_corr[k], _ = pearsonr(age, receptor_data[k, :])
@@ -289,4 +290,4 @@ ax2.set_xlabel('original receptor similarity')
 ax2.set_ylabel('age regressed receptor similarity')
 ax2.set_aspect(1.0/ax2.get_data_ratio(), adjustable='box')
 plt.tight_layout()
-plt.savefig(path+'figures/age_effects.eps')
+plt.savefig(path+'figures/scatter_age_effects.eps')

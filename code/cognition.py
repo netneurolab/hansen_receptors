@@ -199,7 +199,7 @@ brain = plotting.plot_fsaverage(data=pls_result["x_scores"][:, lv],
                                 vmax=np.max(np.abs(pls_result["x_scores"][:, lv])),
                                 views=['lat', 'med'],
                                 data_kws={'representation': "wireframe"})
-brain.save_image(path+'figures/surface_pls_xscores_autorad.eps')
+brain.save_image(path+'figures/surface_pls_xscores.eps')
 
 brain = plotting.plot_fsaverage(data=pls_result["y_scores"][:, lv],
                                 lhannot=annot.lh, rhannot=annot.rh,
@@ -208,7 +208,7 @@ brain = plotting.plot_fsaverage(data=pls_result["y_scores"][:, lv],
                                 vmax=np.max(np.abs(pls_result["y_scores"][:, lv])),
                                 views=['lat', 'med'],
                                 data_kws={'representation': "wireframe"})
-brain.save_image(path+'figures/surface_pls_yscores_autorad.eps')
+brain.save_image(path+'figures/surface_pls_yscores.eps')
 
 
 """
@@ -229,7 +229,7 @@ plt.xticks(range(len(receptor_names)),
            rotation='vertical')
 plt.ylabel("Receptor loadings")
 plt.tight_layout()
-plt.savefig(path+'figures/bar_pls_rload_autorad.eps')
+plt.savefig(path+'figures/bar_pls_rload.eps')
 
 # plot term loadings
 err = (pls_result["bootres"]["y_loadings_ci"][:, lv, 1]
@@ -244,4 +244,4 @@ plt.xticks(np.arange(sum(relidx)), labels=neurosynth.columns[relidx][sorted_idx]
            rotation='vertical')
 plt.ylabel("Cognitive term loadings")
 plt.tight_layout()
-plt.savefig(path+'figures/bar_pls_tload_autorad.eps')
+plt.savefig(path+'figures/bar_pls_tload.eps')
