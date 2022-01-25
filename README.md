@@ -10,7 +10,7 @@ This work is licensed under a
 [cc-by-nc-sa-shield]: https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg
 
 # Mapping neurotransmitter systems to the structural and functional organization of the human neocortex
-This repository contains code and data created in support of my project "Mapping neurotransmitter systems to the structural and functional organization of the human neocortex", now on [bioRxiv](https://www.biorxiv.org/content/10.1101/2021.10.28.466336v1) and as a [tweeprint](https://twitter.com/misicbata/status/1454515245335162882).
+This repository contains code and data created in support of my project "Mapping neurotransmitter systems to the structural and functional organization of the human neocortex", now on [bioRxiv](https://www.biorxiv.org/content/10.1101/2021.10.28.466336v2) and as a [tweeprint](https://twitter.com/misicbata/status/1454515245335162882).
 All code was written in Python.
 Below, I describe all the folders and files in details.
 
