@@ -4,24 +4,18 @@ Concatenate parcellated PET images into region x receptor matrix of densities.
 """
 
 import numpy as np
-import pandas as pd
 from netneurotools import datasets, plotting
 from matplotlib.colors import ListedColormap
-import matplotlib.pyplot as plt
-import seaborn as sns
 from scipy.stats import zscore
-
-
-scale = 'scale033'  # or scale060 or scale125
-
-cammoun = datasets.fetch_cammoun2012()
-info = pd.read_csv(cammoun['info'])
-cortex = info.query('scale == @scale & structure == "cortex"')['id']
-cortex = np.array(cortex) - 1  # python indexing
-nnodes = len(cortex)
+from nilearn.datasets import fetch_atlas_schaefer_2018
 
 path = 'C:/Users/justi/OneDrive - McGill University/MisicLab/proj_receptors/\
 github/hansen_receptors/'
+
+scale = 'scale100'
+
+schaefer = fetch_atlas_schaefer_2018(n_rois=100)
+nnodes = len(schaefer['labels'])
 
 # concatenate the receptors
 
@@ -55,7 +49,7 @@ receptors_csv = [path+'data/PET_parcellated/'+scale+'/5HT1a_way_hc36_savli.csv',
 # combine all the receptors (including repeats)
 r = np.zeros([nnodes, len(receptors_csv)])
 for i in range(len(receptors_csv)):
-    r[:, i] = np.genfromtxt(receptors_csv[i])[cortex]
+    r[:, i] = np.genfromtxt(receptors_csv[i])
 
 receptor_names = np.array(["5HT1a", "5HT1b", "5HT2a", "5HT4", "5HT6", "5HTT", "A4B2",
                            "CB1", "D1", "D2", "DAT", "GABAa", "H3", "M1", "mGluR5",
@@ -94,52 +88,14 @@ plot receptor data
 cmap = np.genfromtxt(path+'data/colourmap.csv', delimiter=',')
 cmap_div = ListedColormap(cmap)
 
-# mean density
-annot = datasets.fetch_cammoun2012('fsaverage')[scale]
-brain = plotting.plot_fsaverage(data=np.mean(zscore(receptor_data), axis=1),
-                                lhannot=annot.lh, rhannot=annot.rh,
-                                order = 'rl',
-                                colormap=cmap_div,
-                                vmin=-np.max(np.abs(np.mean(zscore(receptor_data), axis=1))),
-                                vmax=np.max(np.abs(np.mean(zscore(receptor_data), axis=1))),
-                                views=['lat', 'med'],
-                                data_kws={'representation': "wireframe"})
-brain.save_image(path+'figures/surface_recept_density.eps')
-
-# correlating receptors
-plt.ion()
-plt.figure()
-sns.heatmap(np.corrcoef(zscore(receptor_data).T), vmin=-1, vmax=1, cmap=cmap_div,
-            cbar=False, square=True, linewidths=.5, xticklabels=receptor_names,
-            yticklabels=receptor_names)
-plt.tight_layout()
-plt.savefig(path+'figures/heatmap_recept_corr.eps')
-
-# correlating regions
-plt.ion()
-plt.figure()
-sns.heatmap(np.corrcoef(zscore(receptor_data)), vmin=-1, vmax=1, cmap=cmap_div,
-            cbar=False, square=True, xticklabels=False, yticklabels=False)
-plt.tight_layout()
-plt.savefig(path+'figures/heatmap_region_corr.eps')
-
-# histogram
-plt.ion()
-plt.figure()
-ax = sns.distplot(np.corrcoef(zscore(receptor_data))[np.triu(np.ones(nnodes), 1) > 0])
-ax.set(xlabel = 'receptor similarity')
-plt.savefig(path+'figures/hist_receptor_similarity.eps')
-
 # plot each receptor map
-
-if scale == 'scale125':
-    annot = datasets.fetch_cammoun2012('fsaverage')['scale125']
+if scale == 'scale100':
+    annot = datasets.fetch_schaefer2018('fsaverage')['100Parcels7Networks']
     for k in range(len(receptor_names)):
         brain = plotting.plot_fsaverage(data=receptor_data[:, k],
                                         lhannot=annot.lh,
                                         rhannot=annot.rh,
-                                        order = 'rl',
                                         colormap='plasma',
                                         views=['lat', 'med'],
                                         data_kws={'representation': "wireframe"})
-        brain.save_image(path+'figures/surface_receptor_'+receptor_names[k]+'.png')
+        brain.save_image(path+'figures/schaefer100/surface_receptor_'+receptor_names[k]+'.png')

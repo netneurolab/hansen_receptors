@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Figure 3: Dynamics
+Figure 4: Dynamics
 """
 
-
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from netneurotools import utils, datasets, stats
-from scipy.stats import zscore, pearsonr
+from netneurotools import stats
+from scipy.stats import zscore, pearsonr, ttest_ind
 import seaborn as sns
 from matplotlib.colors import ListedColormap
 from scipy.spatial.distance import squareform, pdist
 from sklearn.linear_model import LinearRegression
+from nilearn.datasets import fetch_atlas_schaefer_2018
+from statsmodels.stats.multitest import multipletests
 
 def get_reg_r_sq(X, y):
     lin_reg = LinearRegression()
@@ -75,6 +75,14 @@ def cv_slr_distance_dependent(X, y, coords, train_pct=.75, metric='rsq'):
     return train_metric, test_metric
 
 
+def get_reg_r_pval(X, y, spins, nspins):
+    emp = get_reg_r_sq(X, y)
+    null = np.zeros((nspins, ))
+    for s in range(nspins):
+        null[s] = get_reg_r_sq(X[spins[:, s], :], y)
+    return (1 + sum(null > emp))/(nspins + 1)
+
+
 def get_perm_p(emp, null):
     return (1 + sum(abs(null - np.mean(null))
                     > abs(emp - np.mean(null)))) / (len(null) + 1)
@@ -86,19 +94,15 @@ set-up
 path = 'C:/Users/justi/OneDrive - McGill University/MisicLab/proj_receptors/\
 github/hansen_receptors/'
 
-scale = 'scale033'
+scale = 'scale100'
 
-cammoun = datasets.fetch_cammoun2012()
-info = pd.read_csv(cammoun['info'])
-cortex = info.query('scale == "scale033" & structure == "cortex"')['id']
-cortex = np.array(cortex) - 1  # python indexing
-nnodes = len(cortex)
-hemiid = np.array(info.query('scale == "scale033"')['hemisphere'])
-hemiid = hemiid == 'R'
-coords = utils.get_centroids(cammoun[scale], image_space=True)
-coords = coords[cortex, :]
-spins = stats.gen_spinsamples(coords, hemiid[cortex], seed=1234)
-nspins = 1000
+schaefer = fetch_atlas_schaefer_2018(n_rois=100)
+nnodes = len(schaefer['labels'])
+coords = np.genfromtxt(path+'data/schaefer/coordinates/Schaefer_100_centres.txt')[:, 1:]
+hemiid = np.zeros((nnodes, ))
+hemiid[:int(nnodes/2)] = 1
+nspins = 10000
+spins = stats.gen_spinsamples(coords, hemiid, n_rotate=nspins, seed=1234)
 
 # load MEG power
 power = np.genfromtxt(path+'data/MEG/power_'+scale+'.csv', delimiter=',')
@@ -121,6 +125,7 @@ Dominance analysis
 model_metrics = dict([])
 train_metric = np.zeros([nnodes, len(power_band)])
 test_metric = np.zeros(train_metric.shape)
+model_pval = np.zeros((len(power_band), ))
 
 for i in range(len(power_band)):
     print(i)
@@ -133,6 +138,10 @@ for i in range(len(power_band)):
                                   zscore(power[:, i]),
                                   coords, .75,
                                   metric='corr')
+    # get model pval
+    model_pval[i] = get_reg_r_pval(zscore(receptor_data),
+                                   zscore(power[:, i]), 
+                                   spins, nspins)
 
 dominance = np.zeros((len(power_band), len(receptor_names)))
 
@@ -143,20 +152,24 @@ np.save(path+'results/dominance_power.npy', dominance)
 np.save(path+'results/power_cv_train.npy', train_metric)
 np.save(path+'results/power_cv_test.npy', test_metric)
 
+model_pval = multipletests(model_pval, method='fdr_bh')[1]
+dominance[np.where(model_pval >= 0.05)[0], :] = 0
+
 plt.ion()
 plt.figure()
-sns.heatmap(dominance, xticklabels=receptor_names, yticklabels=power_band,
+sns.heatmap(dominance / np.sum(dominance, axis=1)[:, None],
+            xticklabels=receptor_names, yticklabels=power_band,
             cmap=cmap_seq, linewidths=.5)
 plt.tight_layout()
-plt.savefig(path+'figures/heatmap_dominance_power.eps')
+plt.savefig(path+'figures/schaefer100/heatmap_dominance_power.eps')
 
 plt.ion()
 plt.figure()
 plt.bar(np.arange(len(power_band)), np.sum(dominance, axis=1),
         tick_label=power_band)
-plt.ylim([0.75, 0.95])
+plt.ylim([0.5, 0.95])
 plt.tight_layout()
-plt.savefig(path+'figures/bar_dominance_power.eps')
+plt.savefig(path+'figures/schaefer100/bar_dominance_power.eps')
 
 # plot cross validation
 fig, (ax1, ax2) = plt.subplots(2, 1)
@@ -166,4 +179,48 @@ ax1.set(ylabel='train set correlation', ylim=(-1, 1))
 ax2.set_xticklabels(power_band, rotation=90)
 ax2.set(ylabel='test set correlation', ylim=(-1, 1))
 plt.tight_layout()
-plt.savefig(path+'figures/violin_crossval.eps')
+plt.savefig(path+'figures/schaefer100/violin_crossval_power_autorad.eps')
+
+# compare dominance across receptor classes
+exc = ['5HT2a', '5HT4', '5HT6', 'D1', 'mGluR5', 'A4B2', 'M1', 'NMDA']
+inh = ['5HT1a', '5HT1b', 'CB1', 'D2', 'GABAa', 'H3', 'MOR']
+mami = ['5HT1a', '5HT1b', '5HT2a', '5HT4', '5HT6', '5HTT', 'D1',
+        'D2', 'DAT', 'H3', 'NET']
+nmami = list(set(receptor_names) - set(mami))
+metab = ['5HT1a', '5HT1b', '5HT2a', '5HT4', '5HT6', 'CB1', 'D1',
+         'D2', 'H3', 'M1', 'mGluR5', 'MOR']
+iono = ['A4B2', 'GABAa', 'NMDA']
+gspath = ['5HT4', '5HT6', 'D1']
+gipath = ['CB1', 'D2', 'H3', '5HT1a', '5HT1b', 'MOR']
+gqpath = ['5HT2a', 'mGluR5', 'M1']
+
+i_exc = np.array([list(receptor_names).index(i) for i in exc])
+i_inh = np.array([list(receptor_names).index(i) for i in inh])
+i_mami = np.array([list(receptor_names).index(i) for i in mami])
+i_nmami = np.array([list(receptor_names).index(i) for i in nmami])
+i_metab =  np.array([list(receptor_names).index(i) for i in metab])
+i_iono = np.array([list(receptor_names).index(i) for i in iono])
+i_gs = np.array([list(receptor_names).index(i) for i in gspath])
+i_gi = np.array([list(receptor_names).index(i) for i in gipath])
+i_gq = np.array([list(receptor_names).index(i) for i in gqpath])
+
+classes = [[i_exc, i_inh], [i_mami, i_nmami],
+           [i_metab, i_iono], [i_gs, i_gi, i_gq]]
+class_names = [['exc', 'inh'], ['monoamine', 'not'],
+               ['metabotropic', 'ionotropic'], ['gs', 'gi', 'gq']]
+plt.ion()
+fig, axs = plt.subplots(1, 4, figsize=(15, 3))
+axs = axs.ravel()
+for i in range(len(classes)):
+    print(class_names[i])
+    d = [dominance[:, classes[i][j]].flatten() for j in range(len(classes[i]))]
+    print(ttest_ind(d[0], d[1]))
+    if len(d) > 2:
+        print(ttest_ind(d[0], d[2]))
+        print(ttest_ind(d[1], d[2]))
+    sns.violinplot(data=d, inner=None, color=".8", ax=axs[i])
+    sns.stripplot(data=d, ax=axs[i])
+    axs[i].set_xticklabels(class_names[i])
+    axs[i].set_ylabel('dominance (power)')
+plt.tight_layout()
+plt.savefig(path+'figures/schaefer100/stripplot_power_rclasses.eps')

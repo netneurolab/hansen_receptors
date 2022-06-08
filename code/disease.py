@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Disease analysis
+Figure 6: Disease analysis
 """
 
 import numpy as np
@@ -12,6 +12,7 @@ import seaborn as sns
 from matplotlib.colors import ListedColormap
 from scipy.spatial.distance import squareform, pdist
 from sklearn.linear_model import LinearRegression
+from statsmodels.stats.multitest import multipletests
 
 def get_reg_r_sq(X, y):
     lin_reg = LinearRegression()
@@ -74,6 +75,19 @@ def cv_slr_distance_dependent(X, y, coords, train_pct=.75, metric='rsq'):
     return train_metric, test_metric
 
 
+def get_perm_p(emp, null):
+    return (1 + sum(abs(null - np.mean(null))
+                    > abs(emp - np.mean(null)))) / (len(null) + 1)
+
+
+def get_reg_r_pval(X, y, spins, nspins):
+    emp = get_reg_r_sq(X, y)
+    null = np.zeros((nspins, ))
+    for s in range(nspins):
+        null[s] = get_reg_r_sq(X[spins[:, s], :], y)
+    return (1 + sum(null > emp))/(nspins + 1)
+
+
 """
 set-up
 """
@@ -87,9 +101,13 @@ cammoun = datasets.fetch_cammoun2012()
 info = pd.read_csv(cammoun['info'])
 cortex = info.query('scale == "scale033" & structure == "cortex"')['id']
 cortex = np.array(cortex) - 1  # python indexing
+hemiid = np.array(info.query('scale == "scale033"')['hemisphere'])
+hemiid = hemiid == 'R'
 coords = utils.get_centroids(cammoun[scale], image_space=True)
 coords = coords[cortex, :]
 nnodes = len(cortex)
+nspins = 10000
+spins = stats.gen_spinsamples(coords, hemiid[cortex], n_rotate=nspins, seed=1234)
 
 # load the receptor data
 receptor_data = np.genfromtxt(path+'results/receptor_data_'+scale+'.csv', delimiter=',')
@@ -113,6 +131,7 @@ Dominance analysis
 model_metrics = dict([])
 train_metric = np.zeros([nnodes, len(disorders)])
 test_metric = np.zeros(train_metric.shape)
+model_pval = np.zeros((len(disorders), ))
 
 for i in range(len(disorders)):
     print(i)
@@ -123,6 +142,12 @@ for i in range(len(disorders)):
     train_metric[:, i], test_metric[:, i] = \
         cv_slr_distance_dependent(zscore(receptor_data), zscore(ct[:, i]),
                                   coords, .75, metric='corr')
+    # get p-value of model
+    model_pval[i] = get_reg_r_pval(zscore(receptor_data),
+                                   zscore(ct[:, i]), 
+                                   spins, nspins)
+
+model_pval = multipletests(model_pval, method='fdr_bh')[1]
 
 dominance = np.zeros((len(disorders), len(receptor_names)))
 
@@ -135,18 +160,20 @@ np.save(path+'results/enigma_cv_test.npy', test_metric)
 
 plt.ion()
 plt.figure()
-sns.heatmap(dominance, xticklabels=receptor_names, yticklabels=disorders,
-            cmap=cmap_seq, linewidth=.5)
-plt.tight_layout()
-plt.savefig(path+'figures/heatmap_dominance_enigma.eps')
-
-plt.ion()
-plt.figure()
 plt.bar(np.arange(len(disorders)), np.sum(dominance, axis=1),
         tick_label=disorders)
 plt.xticks(rotation='vertical')
 plt.tight_layout()
 plt.savefig(path+'figures/bar_dominance_enigma.eps')
+
+dominance[np.where(model_pval >= 0.05)[0], :] = 0
+plt.ion()
+plt.figure()
+sns.heatmap(dominance / np.sum(dominance, axis=1)[:, None],
+            xticklabels=receptor_names, yticklabels=disorders,
+            cmap=cmap_seq, linewidth=.5)
+plt.tight_layout()
+plt.savefig(path+'figures/heatmap_dominance_enigma.eps')
 
 # plot cross validation
 fig, (ax1, ax2) = plt.subplots(2, 1)
@@ -158,3 +185,41 @@ ax2.set(ylabel='test set correlation', ylim=(-1, 1))
 plt.tight_layout()
 plt.savefig(path+'figures/violin_enigma_cv.eps')
 
+# compare dominance across receptor classes
+exc = ['5HT2a', '5HT4', '5HT6', 'D1', 'mGluR5', 'A4B2', 'M1', 'NMDA']
+inh = ['5HT1a', '5HT1b', 'CB1', 'D2', 'GABAa', 'H3', 'MOR']
+mami = ['5HT1a', '5HT1b', '5HT2a', '5HT4', '5HT6', '5HTT', 'D1',
+        'D2', 'DAT', 'H3', 'NET']
+nmami = list(set(receptor_names) - set(mami))
+metab = ['5HT1a', '5HT1b', '5HT2a', '5HT4', '5HT6', 'CB1', 'D1',
+         'D2', 'H3', 'M1', 'mGluR5', 'MOR']
+iono = ['A4B2', 'GABAa', 'NMDA']
+gspath = ['5HT4', '5HT6', 'D1']
+gipath = ['CB1', 'D2', 'H3', '5HT1a', '5HT1b', 'MOR']
+gqpath = ['5HT2a', 'mGluR5', 'M1']
+
+i_exc = np.array([list(receptor_names).index(i) for i in exc])
+i_inh = np.array([list(receptor_names).index(i) for i in inh])
+i_mami = np.array([list(receptor_names).index(i) for i in mami])
+i_nmami = np.array([list(receptor_names).index(i) for i in nmami])
+i_metab =  np.array([list(receptor_names).index(i) for i in metab])
+i_iono = np.array([list(receptor_names).index(i) for i in iono])
+i_gs = np.array([list(receptor_names).index(i) for i in gspath])
+i_gi = np.array([list(receptor_names).index(i) for i in gipath])
+i_gq = np.array([list(receptor_names).index(i) for i in gqpath])
+
+classes = [[i_exc, i_inh], [i_mami, i_nmami],
+           [i_metab, i_iono], [i_gs, i_gi, i_gq]]
+class_names = [['exc', 'inh'], ['monoamine', 'not'],
+               ['metabotropic', 'ionotropic'], ['gs', 'gi', 'gq']]
+plt.ion()
+fig, axs = plt.subplots(1, 4, figsize=(15, 3))
+axs = axs.ravel()
+for i in range(len(classes)):
+    d = [dominance[:, classes[i][j]].flatten() for j in range(len(classes[i]))]
+    sns.violinplot(data=d, inner=None, color=".8", ax=axs[i])
+    sns.stripplot(data=d, ax=axs[i])
+    axs[i].set_xticklabels(class_names[i])
+    axs[i].set_ylabel('dominance (disease)')
+plt.tight_layout()
+plt.savefig(path+'figures/schaefer100/stripplot_enigma_rclasses.eps')

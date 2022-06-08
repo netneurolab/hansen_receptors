@@ -3,13 +3,15 @@
 Supplemental analyses
 """
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from matplotlib.colors import ListedColormap
 import seaborn as sns
 from netneurotools import datasets, plotting
 from scipy.stats import zscore, pearsonr
 from sklearn.linear_model import LinearRegression
+from nilearn.datasets import fetch_atlas_schaefer_2018
+from sklearn.decomposition import PCA
 
 
 def regress_age(age, receptor):
@@ -23,13 +25,11 @@ def regress_age(age, receptor):
 path = 'C:/Users/justi/OneDrive - McGill University/MisicLab/proj_receptors/\
 github/hansen_receptors/'
 
-scale = 'scale033'  # or scale060 or scale125
+scale = 'scale100'
 
-cammoun = datasets.fetch_cammoun2012()
-info = pd.read_csv(cammoun['info'])
-cortex = info.query('scale == "scale033" & structure == "cortex"')['id']
-cortex = np.array(cortex) - 1  # python indexing
-nnodes = len(cortex)
+schaefer = fetch_atlas_schaefer_2018(n_rois=100)
+annot = datasets.fetch_schaefer2018('fsaverage')['100Parcels7Networks']
+nnodes = len(schaefer['labels'])
 
 # colourmaps
 cmap = np.genfromtxt(path+'data/colourmap.csv', delimiter=',')
@@ -84,7 +84,7 @@ receptors_all = {}
 for receptor in receptors_csv:
     name = receptor.split('/')[-1]  # get file name
     name = name.split('.')[0]  # remove .csv
-    receptors_all[name] = zscore(np.genfromtxt(receptor, delimiter=',')[cortex])
+    receptors_all[name] = zscore(np.genfromtxt(receptor, delimiter=','))
 
 receptor_data = np.genfromtxt(path+'results/receptor_data_'+scale+'.csv', delimiter=',')
 receptor_data = zscore(receptor_data)
@@ -170,65 +170,86 @@ sns.regplot(receptor_data[:, receptor_names.index("D2")],
 axs[10].legend(("fallypride", "raclopride"))
 
 plt.tight_layout()
-plt.savefig(path+'figures/scatter_supplement_tracers.eps')
+plt.savefig(path+'figures/schaefer100/scatter_supplement_tracers.eps')
 
 
 """
 compare different parcellation resoultions
 """
 
-recept033 = receptor_data
-recept060 = np.genfromtxt(path+'results/receptor_data_scale060.csv', delimiter=',')
-recept125 = np.genfromtxt(path+'results/receptor_data_scale125.csv', delimiter=',')
+recept100 = receptor_data
+recept200 = np.genfromtxt(path+'results/receptor_data_scale200.csv', delimiter=',')
+recept400 = np.genfromtxt(path+'results/receptor_data_scale400.csv', delimiter=',')
 
-# mean density: scale033
-annot = datasets.fetch_cammoun2012('fsaverage')['scale033']
-brain = plotting.plot_fsaverage(data=np.mean(zscore(recept033), axis=1),
+# PC1: schaefer 100
+pca = PCA(n_components=1)
+pc1sim = np.squeeze(pca.fit_transform(zscore(recept100)))
+
+annot = datasets.fetch_schaefer2018('fsaverage')['100Parcels7Networks']
+brain = plotting.plot_fsaverage(data=pc1sim,
                                 lhannot=annot.lh, rhannot=annot.rh,
-                                order = 'rl',
                                 colormap=cmap_div,
-                                vmin=-np.max(np.abs(np.mean(zscore(recept033), axis=1))),
-                                vmax=np.max(np.abs(np.mean(zscore(recept033), axis=1))),
+                                vmin=-np.max(np.abs(pc1sim)),
+                                vmax=np.max(np.abs(pc1sim)),
                                 views=['lat', 'med'],
                                 data_kws={'representation': "wireframe"})
-brain.save_image(path+'figures/surface_recept_density.eps')
+brain.save_image(path+'figures/schaefer100/surface_pc1_scale100.eps')
 
-# mean density: scale060
-annot = datasets.fetch_cammoun2012('fsaverage')['scale060']
-brain = plotting.plot_fsaverage(data=np.mean(zscore(recept060), axis=1),
+# PC1: schaefer 200
+pca = PCA(n_components=1)
+pc1sim = np.squeeze(pca.fit_transform(zscore(recept200)))
+
+annot = datasets.fetch_schaefer2018('fsaverage')['200Parcels7Networks']
+brain = plotting.plot_fsaverage(data=pc1sim,
                                 lhannot=annot.lh, rhannot=annot.rh,
-                                order = 'rl',
                                 colormap=cmap_div,
-                                vmin=-np.max(np.abs(np.mean(zscore(recept060), axis=1))),
-                                vmax=np.max(np.abs(np.mean(zscore(recept060), axis=1))),
+                                vmin=-np.max(np.abs(pc1sim)),
+                                vmax=np.max(np.abs(pc1sim)),
                                 views=['lat', 'med'],
                                 data_kws={'representation': "wireframe"})
-brain.save_image(path+'figures/surface_recept_density_scale060.eps')
+brain.save_image(path+'figures/schaefer100/surface_pc1_scale200.eps')
 
-# mean density: scale125
-annot = datasets.fetch_cammoun2012('fsaverage')['scale125']
-brain = plotting.plot_fsaverage(data=np.mean(zscore(recept125), axis=1),
+# PC1: schaefer 400
+pca = PCA(n_components=1)
+pc1sim = np.squeeze(pca.fit_transform(zscore(recept400)))
+
+annot = datasets.fetch_schaefer2018('fsaverage')['400Parcels7Networks']
+brain = plotting.plot_fsaverage(data=pc1sim,
                                 lhannot=annot.lh, rhannot=annot.rh,
-                                order = 'rl',
                                 colormap=cmap_div,
-                                vmin=-np.max(np.abs(np.mean(zscore(recept125), axis=1))),
-                                vmax=np.max(np.abs(np.mean(zscore(recept125), axis=1))),
+                                vmin=-np.max(np.abs(pc1sim)),
+                                vmax=np.max(np.abs(pc1sim)),
                                 views=['lat', 'med'],
                                 data_kws={'representation': "wireframe"})
-brain.save_image(path+'figures/surface_recept_density_scale125.eps')
+brain.save_image(path+'figures/schaefer100/surface_pc1_scale400.eps')
 
 # receptor similarity
 plt.ion()
 fig, axs = plt.subplots(1, 3)
 axs = axs.ravel()
-sns.heatmap(np.corrcoef(zscore(recept033)), vmin=-1, vmax=1, cmap=cmap_div,
-            cbar=False, square=True, xticklabels=False, yticklabels=False, ax=axs[0])
-sns.heatmap(np.corrcoef(zscore(recept060)), vmin=-1, vmax=1, cmap=cmap_div,
-            cbar=False, square=True, xticklabels=False, yticklabels=False, ax=axs[1])
-sns.heatmap(np.corrcoef(zscore(recept125)), vmin=-1, vmax=1, cmap=cmap_div,
-            cbar=False, square=True, xticklabels=False, yticklabels=False, ax=axs[2])
+
+nrois = [100, 200, 400]
+for i in range(3):
+    atlas = fetch_atlas_schaefer_2018(n_rois=nrois[i])
+    rsn_mapping = []
+    for row in range(len(atlas['labels'])):
+        rsn_mapping.append(atlas['labels'][row].decode('utf-8').split('_')[2])
+    rsn_mapping = np.array(rsn_mapping)
+
+    recept = locals()['recept{}'.format(nrois[i])]
+    inds = plotting.sort_communities(np.corrcoef(zscore(recept)), rsn_mapping)
+    bounds = plotting._grid_communities(rsn_mapping)
+    bounds[0] += 0.2
+    bounds[-1] -= 0.2
+    sns.heatmap(data=np.corrcoef(zscore(recept))[np.ix_(inds, inds)],
+                cmap=cmap_div, vmin=-1, vmax=1, ax=axs[i], cbar=False,
+                square=True, xticklabels=False, yticklabels=False)
+    for n, edge in enumerate(np.diff(bounds)):
+        axs[i].add_patch(patches.Rectangle((bounds[n], bounds[n]),
+                                           edge, edge, fill=False, linewidth=.5,
+                                           edgecolor='black'))
 plt.tight_layout()
-plt.savefig(path+'figures/heatmap_similarity_mats.eps')
+plt.savefig(path+'figures/schaefer100/heatmap_similarity_mats.eps')
 
 
 """
@@ -247,7 +268,7 @@ plt.ion()
 plt.figure()
 ax = sns.violinplot(data=loo_rho)
 ax.set(ylabel='correlation')
-plt.savefig(path+'figures/violin_loo.eps')
+plt.savefig(path+'figures/schaefer100/violin_loo.eps')
 
 
 """
@@ -257,17 +278,6 @@ age effects?
 age = np.array((26.3, 32.4, 22.6, 25.9, 36.6, 25.1, 33.5, 30.0, 33.0,
                 38.8, 61.0, 26.6, 33.4, 31.7, 40.5, 31.5, 32.3, 40.9,
                 63.6))
-age_corr = np.zeros((nnodes, ))
-for k in range(nnodes):
-    age_corr[k], _ = pearsonr(age, receptor_data[k, :])
-
-annot = datasets.fetch_cammoun2012('fsaverage')['scale033']
-brain = plotting.plot_fsaverage(data=age_corr,
-                                lhannot=annot.lh, rhannot=annot.rh,
-                                order = 'rl', colormap=cmap_div,
-                                vmin=-1, vmax=1, views=['lat', 'med'],
-                                data_kws={'representation': "wireframe"})
-brain.save_image(path+'figures/surface_age_effect.png')
 
 # regress age out
 receptor_data_reg = np.zeros(receptor_data.shape)
@@ -290,4 +300,4 @@ ax2.set_xlabel('original receptor similarity')
 ax2.set_ylabel('age regressed receptor similarity')
 ax2.set_aspect(1.0/ax2.get_data_ratio(), adjustable='box')
 plt.tight_layout()
-plt.savefig(path+'figures/scatter_age_effects.eps')
+plt.savefig(path+'figures/schaefer100/scatter_age_effects.eps')

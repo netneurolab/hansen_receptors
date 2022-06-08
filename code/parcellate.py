@@ -3,20 +3,15 @@
 Parcellate volumetric PET images
 """
 
-
-from netneurotools import datasets
-from neuromaps import transforms, plotting
-from neuromaps.images import construct_shape_gii
 import numpy as np
 from nilearn.input_data import NiftiLabelsMasker
 from nilearn._utils import check_niimg
-import nibabel as nib
-import matplotlib.pyplot as plt
-from scipy.stats import zscore
+from nilearn.datasets import fetch_atlas_schaefer_2018
 
-scale = 'scale125'
+scale = 'scale100'
 
-cammoun = datasets.fetch_cammoun2012()
+schaefer = fetch_atlas_schaefer_2018(n_rois=100)
+
 path = "C:/Users/justi/OneDrive - McGill University/MisicLab/proj_receptors/\
 github/hansen_receptors/data/PET_nifti_images/"
 outpath = "C:/Users/justi/OneDrive - McGill University/MisicLab/proj_receptors/\
@@ -64,30 +59,9 @@ receptors_nii = [path+'5HT1a_way_hc36_savli.nii',
 parcellated = {}
 
 for receptor in receptors_nii:
-    mask = NiftiLabelsMasker(cammoun[scale], resampling_target='data')
+    mask = NiftiLabelsMasker(schaefer['maps'], resampling_target='data')
     img = check_niimg(receptor, atleast_4d=True)
     parcellated[receptor] = mask.fit_transform(img).squeeze()
     name = receptor.split('/')[-1]  # get nifti file name
     name = name.split('.')[0]  # remove .nii
     np.savetxt(outpath+name+'.csv', parcellated[receptor], delimiter=',')
-
-
-# plot surfaces - takes a while
-
-path = "C:/Users/justi/OneDrive - McGill University/MisicLab/proj_receptors/\
-github/hansen_receptors/"
-
-for receptor in receptors_nii:
-    receptor_surface = transforms.mni152_to_fsaverage(receptor)
-    # zscore
-    surfL = receptor_surface[0].agg_data()  # numpy format
-    surfR = receptor_surface[1].agg_data()
-    surfLR = zscore(np.concatenate((surfL, surfR)))  # zscore hemispheres together
-    surfL = surfLR[:len(surfL)]
-    surfR = surfLR[len(surfL):]
-    receptor_surface = (construct_shape_gii(surfL), construct_shape_gii(surfR))
-    name = receptor.split('/')[-1]  # get nifti file name
-    name = name.split('.')[0]  # remove .nii
-    plotting.plot_surf_template(receptor_surface, 'fsaverage', '41k',
-                                cmap='plasma',
-                                output_file=path+'figures/receptor_surfaces/'+name+'.png')
