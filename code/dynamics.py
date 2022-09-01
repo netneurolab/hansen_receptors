@@ -179,7 +179,7 @@ ax1.set(ylabel='train set correlation', ylim=(-1, 1))
 ax2.set_xticklabels(power_band, rotation=90)
 ax2.set(ylabel='test set correlation', ylim=(-1, 1))
 plt.tight_layout()
-plt.savefig(path+'figures/schaefer100/violin_crossval_power_autorad.eps')
+plt.savefig(path+'figures/schaefer100/violin_crossval_power.eps')
 
 # compare dominance across receptor classes
 exc = ['5HT2a', '5HT4', '5HT6', 'D1', 'mGluR5', 'A4B2', 'M1', 'NMDA']

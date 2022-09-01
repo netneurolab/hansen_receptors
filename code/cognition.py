@@ -16,90 +16,6 @@ from scipy.stats import zscore, pearsonr, ttest_ind
 from scipy.spatial.distance import squareform, pdist
 from nilearn.datasets import fetch_atlas_schaefer_2018
 
-def pls_cv_distance_dependent(X, Y, coords, trainpct=0.75, lv=0,
-                              testnull=False, spins=None, nspins=1000):
-    """
-    Distance-dependent cross validation.
-
-    Parameters
-    ----------
-    X : (n, p1) array_like
-        Input data matrix. `n` is the number of brain regions.
-    Y : (n, p2) array_like
-        Input data matrix. `n` is the number of brain regions.
-    coords : (n, 3) array_like
-        Region (x,y,z) coordinates. `n` is the number of brain regions.
-    trainpct : float 
-        Percent observations in train set. 0 < trainpct < 1.
-        Default = 0.75.
-    lv : int
-        Index of latent variable to cross-validate. Default = 0.
-    testnull : Boolean
-        Whether to calculate and return null mean test-set correlation.
-    spins : (n, nspins) array_like
-        Spin-test permutations. Required if testnull=True.
-    nspins : int
-        Number of spin-test permutations. Only used if testnull=True
-
-    Returns
-    -------
-    train : (nplit, ) array
-        Training set correlation between X and Y scores.me
-    test : (nsplit, ) array
-        Test set correlation between X and Y scores.
-
-    """
-
-    X = np.array(X)
-    Y = np.array(Y)
-
-    nnodes = len(coords)
-    train = np.zeros((nnodes, ))
-    test = np.zeros((nnodes, ))
-    
-    P = squareform(pdist(coords, metric="euclidean"))
-
-    for k in range(nnodes):
-
-        # distance from a node to all others
-        distances = P[k, :]
-        idx = np.argsort(distances)
-        
-        train_idx = idx[:int(np.floor(trainpct * nnodes))]
-        test_idx = idx[int(np.floor(trainpct * nnodes)):]
-
-        Xtrain = X[train_idx, :]
-        Xtest = X[test_idx, :]
-        Ytrain = Y[train_idx, :]
-        Ytest = Y[test_idx, :]
-
-        # pls analysis
-        train_result = pyls.behavioral_pls(Xtrain, Ytrain, n_boot=0, n_perm=0, test_split=0)
-
-        train[k], _ = pearsonr(train_result["x_scores"][:, lv],
-                               train_result["y_scores"][:, lv])
-        # project weights, correlate predicted scores in the test set
-        test[k], _ = pearsonr(Xtest @ train_result["x_weights"][:, lv],
-                              Ytest @ train_result["y_weights"][:, lv])
-
-    # if testnull=True, get distribution of mean null test-set correlations.
-    if testnull:
-        print("Running null test-set correlations, will take time")
-
-        testnull = np.zeros((nspins, nnodes))
-        trainnull = np.zeros((nspins, nnodes))
-
-        for k in range(nspins):  # will take a while
-            print('test null iteration ' + str(k) + '/' + str(nspins))
-            tr, te, _, _ = pls_cv_distance_dependent(X, Y[spins[:, k], :], coords)
-            testnull[k, :]  = te
-            trainnull[k, :] = tr
-    else:
-        testnull = None
-        trainnull = None
-
-    return train, test, testnull, trainnull
-
 """
 set-up
 """
@@ -145,13 +61,7 @@ Y = zscore(neurosynth)
 pls_result = pyls.behavioral_pls(X, Y, n_boot=nspins, n_perm=nspins, permsamples=spins,
                                  test_split=0, seed=1234)
 pyls.save_results(path+'results/pls_result.hdf5', pls_result)
-
-train, test, testnull, trainnull = pls_cv_distance_dependent(X, Y, coords, testnull=True,
-                                        spins=spins, nspins=1000)
 lv = 0  # latent variable
-np.save(path+'results/pls_train.npy', train)
-np.save(path+'results/pls_test.npy', test)
-np.save(path+'results/pls_testnull.npy', testnull)
 
 # covariance explained
 # NOTE: `pls_result['permres']['perm_singval'] comes from locally editing
@@ -209,6 +119,12 @@ brain = plotting.plot_fsaverage(data=pls_result["y_scores"][:, lv],
 brain.save_image(path+'figures/schaefer100/surface_pls_yscores.eps')
 
 # plot cross-validation
+# NOTE: code for CV is done in matlab because pyls doesn't implement
+# distance-dependent CV with procrustes rotation and I am not in the
+# mood to translate and add the matlab code to pyls
+
+train = np.genfromtxt(path+'results/pls_train.csv', delimiter=',')
+test = np.genfromtxt(path+'results/pls_test.csv', delimiter=',')
 testnull =  np.genfromtxt(path+'results/pls_testnull.csv', delimiter=',')
 emp = pearsonr(pls_result['x_scores'][:, lv], pls_result['y_scores'][:, lv])[0]
 fig, ax = plt.subplots(figsize=(4, 4))
@@ -217,6 +133,8 @@ sns.boxplot(data=[train, test, np.mean(testnull, axis=0)], ax=ax)
 # ax.plot(1, np.mean(test), 'o', c='red')  # mean test set correlation
 ax.set_xticklabels(['train', 'test', 'null'])
 ax.set_ylabel('score correlation')
+p = (1 + np.sum(np.mean(testnull, axis=0) > np.mean(test))) / (1 + testnull.shape[1])
+ax.set_title(['p = ' + str(p)[:6]])
 plt.savefig(path+'figures/schaefer100/boxplot_pls_cv.eps')
 
 

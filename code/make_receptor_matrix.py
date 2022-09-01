@@ -49,7 +49,7 @@ receptors_csv = [path+'data/PET_parcellated/'+scale+'/5HT1a_way_hc36_savli.csv',
 # combine all the receptors (including repeats)
 r = np.zeros([nnodes, len(receptors_csv)])
 for i in range(len(receptors_csv)):
-    r[:, i] = np.genfromtxt(receptors_csv[i])
+    r[:, i] = np.genfromtxt(receptors_csv[i], delimiter=',')
 
 receptor_names = np.array(["5HT1a", "5HT1b", "5HT2a", "5HT4", "5HT6", "5HTT", "A4B2",
                            "CB1", "D1", "D2", "DAT", "GABAa", "H3", "M1", "mGluR5",

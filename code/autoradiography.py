@@ -141,7 +141,7 @@ def corr_perm(x, y, perms, nperms):
     null = np.zeros((nperms, ))
     for i in range(nperms):
         null[i] = pearsonr(x, y[perms[:, i]])[0]
-    pval = get_perm_p(emp, null)
+    pval = get_perm_p(rho, null)
     return rho, pval
     
 
@@ -735,7 +735,7 @@ r, p = corr_perm(petpls["x_scores"][goodidx, lv],
                  pls_result["x_scores"][:, lv], perms, nspins)
 ax1.set_xlabel('receptor scores (autoradiography)')
 ax1.set_ylabel('receptor scores (pet)')
-ax1.set_title('r = ' + str(r)[:5] + ', p = ' + str(p)[:5])
+ax1.set_title('r = ' + str(r)[:5] + ', p = ' + str(p)[:6])
 ax1.set_aspect(1.0/ax1.get_data_ratio(), adjustable='box')
 
 sns.regplot(x=pls_result["y_scores"][:, lv],
@@ -745,7 +745,7 @@ r, p = corr_perm(petpls["y_scores"][goodidx, lv],
                  pls_result["y_scores"][:, lv], perms, nspins)
 ax2.set_xlabel('cognitive scores (autoradiography)')
 ax2.set_ylabel('cognitive scores (pet)')
-ax2.set_title('r = ' + str(r)[:5] + ', p = ' + str(p)[:5])
+ax2.set_title('r = ' + str(r)[:5] + ', p = ' + str(p)[:6])
 ax2.set_aspect(1.0/ax2.get_data_ratio(), adjustable='box')
 
 plt.tight_layout()
@@ -761,8 +761,6 @@ ct = np.genfromtxt(path+'data/enigma_atrophy.csv', delimiter=',')
 disorders = ['22q', 'adhd', 'asd', 'epilepsy_gge', 'epilepsy_rtle',
              'epilepsy_ltle', 'depression', 'ocd', 'schizophrenia',
              'bipolar', 'obesity', 'schizotypy', 'park']
-spins_cammoun = np.genfromtxt(path+'data/autoradiography/cammoun_scale033_spins.csv',
-                              delimiter=',').astype(int)
 
 model_metrics = dict([])
 model_pval = np.zeros((len(disorders), ))
