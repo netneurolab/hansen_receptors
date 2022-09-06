@@ -479,19 +479,19 @@ plt.plot(rsq_sc, rsq_sc, 'k-', linewidth=.5)
 plt.xlabel('Rsq from SC only')
 plt.ylabel('Rsq from SC + Receptors')
 ax.set_aspect(1.0/ax.get_data_ratio(), adjustable='box')
-plt.savefig(path+'figures/schaefer100/scatter_scfc_coupling_cs.eps')
+plt.savefig(path+'figures/schaefer100/scatter_scfc_coupling.eps')
 
 annot = datasets.fetch_schaefer2018('fsaverage')['100Parcels7Networks']
 brain = plotting.plot_fsaverage(data=rsq_r,
                                 lhannot=annot.lh, rhannot=annot.rh,
-                                colormap=cmap_seq, vmin=0, vmax=0.56,
+                                colormap=cmap_seq, vmin=0, vmax=0.60,
                                 views=['lat', 'med'],
                                 data_kws={'representation': "wireframe"})
 brain.save_image(path+'figures/schaefer100/surface_rsq_r.eps')
 
 brain = plotting.plot_fsaverage(data=rsq_sc,
                                 lhannot=annot.lh, rhannot=annot.rh,
-                                colormap=cmap_seq, vmin=0, vmax=0.56,
+                                colormap=cmap_seq, vmin=0, vmax=0.60,
                                 views=['lat', 'med'],
                                 data_kws={'representation': "wireframe"})
 brain.save_image(path+'figures/schaefer100/surface_rsq_sc.eps')

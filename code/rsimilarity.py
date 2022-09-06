@@ -169,7 +169,7 @@ plt.savefig(path+'figures/schaefer100/stripplot_mes_classes_pc1.eps')
 # PC1 and synapse density
 ucbj_surface = nmap.datasets.fetch_annotation(desc='ucbj')
 parc = parcellate.Parcellater(schaefer['maps'], 'MNI152')
-ucbj = zscore(np.squeeze(parc.fit_transform(ucbj_surface, 'MNI152').T))
+ucbj = zscore(np.squeeze(parc.fit_transform(ucbj_surface, 'MNI152', True).T))
 r, p, _ = corr_spin(pc1, ucbj, spins, nspins)
 plt.figure()
 sns.regplot(pc1, ucbj, scatter=False)

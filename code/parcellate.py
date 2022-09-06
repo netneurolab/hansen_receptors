@@ -4,9 +4,8 @@ Parcellate volumetric PET images
 """
 
 import numpy as np
-from nilearn.input_data import NiftiLabelsMasker
-from nilearn._utils import check_niimg
 from nilearn.datasets import fetch_atlas_schaefer_2018
+from neuromaps.parcellate import Parcellater
 
 scale = 'scale100'
 
@@ -57,11 +56,9 @@ receptors_nii = [path+'5HT1a_way_hc36_savli.nii',
                  path+'VAChT_feobv_hc18_aghourian_sum.nii']
 
 parcellated = {}
-
+parcellater = Parcellater(schaefer['maps'], 'MNI152')
 for receptor in receptors_nii:
-    mask = NiftiLabelsMasker(schaefer['maps'], resampling_target='data')
-    img = check_niimg(receptor, atleast_4d=True)
-    parcellated[receptor] = mask.fit_transform(img).squeeze()
+    parcellated[receptor] = parcellater.fit_transform(receptor, 'MNI152', True)
     name = receptor.split('/')[-1]  # get nifti file name
     name = name.split('.')[0]  # remove .nii
     np.savetxt(outpath+name+'.csv', parcellated[receptor], delimiter=',')

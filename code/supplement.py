@@ -46,7 +46,7 @@ receptors_csv = [path+'data/PET_parcellated/'+scale+'/5HT1a_way_hc36_savli.csv',
                  path+'data/PET_parcellated/'+scale+'/5HT1b_p943_hc22_savli.csv',
                  path+'data/PET_parcellated/'+scale+'/5HT1b_p943_hc65_gallezot.csv',
                  path+'data/PET_parcellated/'+scale+'/5HT2a_cimbi_hc29_beliveau.csv',
-                 path+'data/PET_parcellated/'+scale+'/5HT2a_ALT_hc19_savli.csv',
+                 path+'data/PET_parcellated/'+scale+'/5HT2a_alt_hc19_savli.csv',
                  path+'data/PET_parcellated/'+scale+'/5HT2a_mdl_hc3_talbot.csv',
                  path+'data/PET_parcellated/'+scale+'/5HT4_sb20_hc59_beliveau.csv',
                  path+'data/PET_parcellated/'+scale+'/5HT6_gsk_hc30_radhakrishnan.csv',
@@ -149,7 +149,7 @@ axs[3].legend(("Spreng", "Tuominen", "Bedard", "Aghourian"))
 
 t = ["5HT1a", "5HT1b", "5HT2a", "5HTT", "CB1", "D2", "DAT", "GABAa", "MOR", "NET"]
 othermap = ["5HT1a_cumi_hc8_beliveau", "5HT1b_az_hc36_beliveau", 
-            "5HT2a_ALT_hc19_savli", "5HTT_dasb_hc30_savli",
+            "5HT2a_alt_hc19_savli", "5HTT_dasb_hc30_savli",
             "CB1_FMPEPd2_hc22_laurikainen", "D2_fallypride_hc49_jaworska",
             "DAT_fepe2i_hc6_sasaki", "GABAa_flumazenil_hc6_dukart",
             "MU_carfentanil_hc39_turtonen", "NAT_MRB_hc10_hesse"]
@@ -292,6 +292,8 @@ ax1.scatter(receptor_data.flatten(), receptor_data_reg.flatten(), s=5)
 ax1.set_xlabel('original receptor densities')
 ax1.set_ylabel('age regressed receptor densities')
 ax1.set_aspect(1.0/ax1.get_data_ratio(), adjustable='box')
+r, p = pearsonr(receptor_data.flatten(), receptor_data_reg.flatten())
+ax1.set_title(['r=' + str(r)[:5] + ', p=' + str(p)[:6]])
 rsim = np.corrcoef(receptor_data)
 rsim_reg = np.corrcoef(receptor_data_reg)
 mask =  np.triu(np.ones(nnodes), 1) > 0
@@ -299,5 +301,7 @@ ax2. scatter(rsim[mask], rsim_reg[mask], s=5)
 ax2.set_xlabel('original receptor similarity')
 ax2.set_ylabel('age regressed receptor similarity')
 ax2.set_aspect(1.0/ax2.get_data_ratio(), adjustable='box')
+r, p = pearsonr(rsim[mask], rsim_reg[mask])
+ax2.set_title(['r=' + str(r)[:5] + ', p=' + str(p)[:6]])
 plt.tight_layout()
 plt.savefig(path+'figures/schaefer100/scatter_age_effects.eps')

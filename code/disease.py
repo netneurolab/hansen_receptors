@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from netneurotools import datasets, stats, utils
-from scipy.stats import zscore, pearsonr
+from scipy.stats import zscore, pearsonr, ttest_ind
 import seaborn as sns
 from matplotlib.colors import ListedColormap
 from scipy.spatial.distance import squareform, pdist
@@ -216,7 +216,12 @@ plt.ion()
 fig, axs = plt.subplots(1, 4, figsize=(15, 3))
 axs = axs.ravel()
 for i in range(len(classes)):
+    print(class_names[i])
     d = [dominance[:, classes[i][j]].flatten() for j in range(len(classes[i]))]
+    print(ttest_ind(d[0], d[1]))
+    if len(d) > 2:
+        print(ttest_ind(d[0], d[2]))
+        print(ttest_ind(d[1], d[2]))
     sns.violinplot(data=d, inner=None, color=".8", ax=axs[i])
     sns.stripplot(data=d, ax=axs[i])
     axs[i].set_xticklabels(class_names[i])
