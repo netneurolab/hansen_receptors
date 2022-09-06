@@ -167,7 +167,7 @@ plt.ion()
 plt.figure()
 plt.bar(np.arange(len(power_band)), np.sum(dominance, axis=1),
         tick_label=power_band)
-plt.ylim([0.5, 0.95])
+plt.ylim([0.7, 0.95])
 plt.tight_layout()
 plt.savefig(path+'figures/schaefer100/bar_dominance_power.eps')
 
