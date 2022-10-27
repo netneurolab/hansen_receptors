@@ -164,7 +164,7 @@ sns.stripplot(x=me, y=pc1, ax=ax)
 ax.set_xticklabels(me_names)
 ax.set_ylabel('PC1sim')
 plt.tight_layout()
-plt.savefig(path+'figures/schaefer100/stripplot_mes_classes_pc1sim.eps')
+plt.savefig(path+'figures/schaefer100/stripplot_mes_classes_pc1.eps')
 
 # PC1 and synapse density
 ucbj_surface = nmap.datasets.fetch_annotation(desc='ucbj')
